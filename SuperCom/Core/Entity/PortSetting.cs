@@ -55,7 +55,7 @@ namespace SuperCom.Entity
 
         public static List<int> DEFAULT_BAUDRATES = new List<int>()
         {
-            9600,19200,115200,1500000
+            115200,1500000
         };
 
         public static List<int> DEFAULT_DATABITS_LIST = new List<int>()

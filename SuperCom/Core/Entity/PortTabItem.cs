@@ -755,8 +755,9 @@ namespace SuperCom.Entity
                     {
                         SaveData($"{ConfigManager.Settings.SendPrefix}{value}", DateHelper.Now());
                     }
-                    else { 
-                        SaveData($"{value}", DateHelper.Now());
+                    else {
+                        // 无前缀情况不在窗口不显示发送内容
+                        //SaveData($"{value}", DateHelper.Now());
                     }
 
                     TX += Encoding.UTF8.GetByteCount(value);
