@@ -247,6 +247,20 @@ namespace SuperCom.Entity
             }
         }
 
+        private string _filterText;
+        public string FilterText
+        {
+            get => _filterText;
+            set
+            {
+                if (_filterText != value)
+                {
+                    _filterText = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
         private DateTime _ConnectTime;
         public DateTime ConnectTime {
             get { return _ConnectTime; }
@@ -593,32 +607,35 @@ namespace SuperCom.Entity
         }
 
 
+        public int ContainsSubstring(string str1, string str2)
+        {
+            if (str1 != null && str2 != null && str1.Contains(str2))
+                return 1;
+            else
+                return 0;
+        }
         /// <summary>
         /// 过滤器
         /// </summary>
         /// <param name="value"></param>
         public void FilterLine(string value)
         {
-            // if (!EnabledFilter)
-            TextEditor?.AppendText(value);
-            // else
-            // {
-            //     if (!string.IsNullOrEmpty(value))
-            //     {
-            //         // 将字符转为一行
-            //         int idx = value.IndexOf("\n");
-            //         if (idx < 0)
-            //             Buffer.Append(value);
-            //         else
-            //         {
-            //             Buffer.Append(value.Substring(0, idx + 1));
-            //             FilterQueue.Enqueue(Buffer.ToString());
-            //             Buffer.Clear();
-            //             FilterLine(value.Substring(idx + 1));
-            //         }
-            //     }
+            if (!EnabledFilter)
+            {
+                TextEditor?.AppendText(value);
+                return;
+            }
 
-            // }
+            if (string.IsNullOrEmpty(FilterText))
+            {
+                TextEditor?.AppendText("串口工具过滤开启且内容为空!\n");
+                return;
+            }
+
+            if (ContainsSubstring(value, FilterText) == 1)
+            {
+                TextEditor?.AppendText(value);
+            }
         }
 
         /// <summary>

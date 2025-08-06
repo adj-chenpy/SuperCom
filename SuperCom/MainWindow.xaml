@@ -1991,13 +1991,24 @@
                                                     VerticalAlignment="Center"
                                                     Background="{DynamicResource Window.Title.Background}"
                                                     IsChecked="{Binding EnabledFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                    Visibility="Collapsed" />
+                                                    ToolTip="点击开启过滤"
+                                                    Visibility="Visible" />
+
                                                 <TextBlock
                                                     VerticalAlignment="Center"
                                                     Style="{StaticResource BaseTextBlock}"
                                                     Text="{DynamicResource Percolator}"
                                                     ToolTip="过滤规则同语法高亮"
                                                     Visibility="Collapsed" />
+
+                                                <TextBox
+                                                    Width="200"
+                                                    Margin="10,0,0,0"
+                                                    Background="Transparent"
+                                                    Foreground="White"
+                                                    Text="{Binding FilterText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    VerticalAlignment="Center"
+                                                    Height="20" />
 
                                             </WrapPanel>
                                         </Border>
