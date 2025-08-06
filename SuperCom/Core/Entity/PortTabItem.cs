@@ -669,19 +669,20 @@ namespace SuperCom.Entity
                 char c;
                 for (int i = 0; i < valueLen; i++) {
                     c = value[i];
+                    /* 原作者是对一次输出，多次换行，每个换行都添加时间戳 */
                     if (c == '\r' && i < valueLen - 1 && value[i + 1] == '\n') {
-                        RecvBuffer.Append($"\r\n[{now}] ");
+                        RecvBuffer.Append($"\r\n");
                         i++;//跳过 \n
                         continue;
                     } else if (c == '\r' || c == '\n') {
-                        RecvBuffer.Append($"\r\n[{now}] ");
+                        RecvBuffer.Append($"\r\n");
                         continue;
                     } else {
                         RecvBuffer.Append(c);
                     }
                 }
                 value = RecvBuffer.ToString();
-                value += Environment.NewLine;
+                // value += Environment.NewLine;
             }
             CurrentCharSize += Encoding.UTF8.GetByteCount(value);
             //MonitorLine(value);
