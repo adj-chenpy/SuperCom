@@ -662,6 +662,7 @@ namespace SuperCom.Entity
             string value = inputData.Replace("\0", "\\0"); // 业务侧会打印很多 \0，需要转成 \\0 才能在文本框上显示
             int valueLen = value.Length;
             if (AddTimeStamp) {
+                int flag = 0;
                 // 遍历字符串
                 RecvBuffer.Clear();
                 RecvBuffer.Append($"[{now}] ");
@@ -672,17 +673,22 @@ namespace SuperCom.Entity
                     /* 原作者是对一次输出，多次换行，每个换行都添加时间戳 */
                     if (c == '\r' && i < valueLen - 1 && value[i + 1] == '\n') {
                         RecvBuffer.Append($"\r\n");
+                        flag = 1;
                         i++;//跳过 \n
                         continue;
                     } else if (c == '\r' || c == '\n') {
                         RecvBuffer.Append($"\r\n");
+                        flag = 1;
                         continue;
                     } else {
                         RecvBuffer.Append(c);
                     }
                 }
                 value = RecvBuffer.ToString();
-                // value += Environment.NewLine;
+                if(flag == 0)
+                {
+                    value += Environment.NewLine;
+                }
             }
             CurrentCharSize += Encoding.UTF8.GetByteCount(value);
             //MonitorLine(value);
