@@ -93,8 +93,8 @@
                                     Width="300"
                                     Margin="13,0"
                                     LargeChange="100"
-                                    Maximum="2048"
-                                    Minimum="256"
+                                    Maximum="4096"
+                                    Minimum="32"
                                     SmallChange="10"
                                     Value="{Binding MemoryLimit, Source={x:Static config:ConfigManager.Settings}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 

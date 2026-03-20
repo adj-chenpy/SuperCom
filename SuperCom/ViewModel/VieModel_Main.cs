@@ -42,6 +42,7 @@ namespace SuperCom.ViewModel
         public AdvancedSend CurrentAdvancedSend { get; set; }
 
         public Action<List<PortTabItem>> OnBaudRatesChanged { get; set; }
+        public List<string> Paritys { get; set; } = new List<string>() { "None", "Odd", "Even", "Mark", "Space" };
 
         private ObservableCollection<string> SendHistory { get; set; }
 
@@ -102,13 +103,6 @@ namespace SuperCom.ViewModel
         public ObservableCollection<PortTabItem> PortTabItems {
             get { return _PortTabItems; }
             set { _PortTabItems = value; RaisePropertyChanged(); }
-        }
-
-
-        private ObservableCollection<SideComPort> _SideComPorts;
-        public ObservableCollection<SideComPort> SideComPorts {
-            get { return _SideComPorts; }
-            set { _SideComPorts = value; RaisePropertyChanged(); }
         }
 
         private string _StatusText = DEFAULT_STATUS_TEXT;
@@ -218,8 +212,6 @@ namespace SuperCom.ViewModel
         {
             PortTabItems = new ObservableCollection<PortTabItem>();
             PortTabItems.CollectionChanged += OnPortTabItemsCollectionChanged;
-
-            InitPortData();
             InitSendHistory();
             LoadSendCommands();
             LoadBaudRates();
@@ -352,40 +344,6 @@ namespace SuperCom.ViewModel
             foreach (var item in HighlightingManager.Instance.HighlightingDefinitions) {
                 HighlightingDefinitions.Add(item);
                 HighLightRule.AllName.Add(item.Name);
-            }
-
-        }
-
-
-        public void InitPortData(ComPortSortType sortType = ComPortSortType.AddTime, bool desc = false)
-        {
-            Dictionary<string, string> dict = SerialPortEx.GetAllPorts();
-            string[] ports = dict.Keys.ToArray();
-            List<string> portNames = new List<string>();
-            switch (sortType) {
-                case ComPortSortType.AddTime:
-                    if (desc)
-                        portNames = ports.Reverse().ToList();
-                    else
-                        portNames = ports.ToList();
-                    break;
-                case ComPortSortType.PortName:
-                    if (desc)
-                        portNames = ports.OrderByDescending(name => name, new ComPortComparer()).ToList();
-                    else
-                        portNames = ports.OrderBy(name => name, new ComPortComparer()).ToList();
-                    break;
-                default:
-                    break;
-
-
-            }
-
-            SideComPorts = new ObservableCollection<SideComPort>();
-            foreach (string port in portNames) {
-                SideComPort sideComPort = new SideComPort(port, false);
-                sideComPort.Detail = dict[port];
-                SideComPorts.Add(sideComPort);
             }
 
         }

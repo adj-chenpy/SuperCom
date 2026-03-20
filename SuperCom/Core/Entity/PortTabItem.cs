@@ -308,7 +308,7 @@ namespace SuperCom.Entity
 
         public void ClearData()
         {
-
+            TextEditor?.Clear();
         }
 
         #region "收数据处理"

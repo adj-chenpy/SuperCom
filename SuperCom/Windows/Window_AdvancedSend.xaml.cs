@@ -8,6 +8,7 @@ using SuperControls.Style.Windows;
 using SuperUtils.Common;
 using SuperUtils.IO;
 using SuperUtils.Time;
+using SuperUtils.WPF.VisualTools;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
@@ -70,7 +71,7 @@ namespace SuperCom
         }
 
 
-        private void BaseWindow_ContentRendered(object sender, EventArgs e)
+        public void SetSelect()
         {
 
             if (Main != null && Main.vieModel != null && Main?.vieModel.HighlightingDefinitions?.Count > 0) {
@@ -87,8 +88,33 @@ namespace SuperCom
             if (Main != null && Main.vieModel != null && vieModel.CurrentProjects?.Count > 0) {
                 if (SideSelectedIndex < 0 || SideSelectedIndex > vieModel.CurrentProjects.Count)
                     SideSelectedIndex = 0;
-                sideListBox.SelectedIndex = SideSelectedIndex;
+                ScrollToItem(SideSelectedIndex);
             }
+        }
+
+        private void ScrollToItem(int targetIndex)
+        {
+            if (targetIndex < 0 || targetIndex >= sideListBox.Items.Count) {
+                return;
+            }
+            sideListBox.Dispatcher.BeginInvoke(new Action(() => {
+                if (sideListBox.ItemContainerGenerator.ContainerFromIndex(targetIndex) is ListBoxItem listBoxItem) {
+                    listBoxItem.BringIntoView();
+                    sideListBox.SelectedIndex = targetIndex;
+                } else {
+                    ScrollToIndexDirectly(sideListBox, targetIndex);
+                }
+            }), System.Windows.Threading.DispatcherPriority.Render);
+        }
+
+        private void ScrollToIndexDirectly(ListBox listBox, int targetIndex)
+        {
+            var scrollViewer = VisualHelper.FindVisualChild<ScrollViewer>(listBox);
+            if (scrollViewer == null) {
+                return;
+            }
+            listBox.ScrollIntoView(listBox.Items[targetIndex]);
+            listBox.SelectedIndex = targetIndex;
         }
 
         private void DeleteProject(object sender, RoutedEventArgs e)
@@ -427,14 +453,13 @@ namespace SuperCom
         {
             bool success = false;
             await Dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)delegate {
-                SideComPort serialComPort = vieModel.Main.vieModel.SideComPorts.Where(arg => arg.Name.Equals(portName)).FirstOrDefault();
-                if (serialComPort == null || serialComPort.PortTabItem == null || serialComPort.PortTabItem.SerialPort == null) {
+                PortTabItem portTabItem = vieModel.Main.vieModel.PortTabItems.Where(arg => arg.Name.Equals(portName)).FirstOrDefault();
+                if (portTabItem == null) {
                     LogToTextBox($"[E] 连接串口 {portName} 失败！");
                     success = false;
                     return;
                 }
-                SerialPort port = serialComPort.PortTabItem.SerialPort;
-                PortTabItem portTabItem = vieModel.Main.vieModel.PortTabItems.Where(arg => arg.Name.Equals(portName)).FirstOrDefault();
+                SerialPort port = portTabItem.SerialPort;
                 string value = command.Command;
                 if (port != null) {
                     success = portTabItem.SendCommand(value);
