@@ -687,14 +687,24 @@ namespace SuperCom.Entity
                 char c;
                 for (int i = 0; i < valueLen; i++) {
                     c = value[i];
-                    /* 原作者是对一次输出，多次换行，每个换行都添加时间戳 */
                     if (c == '\r' && i < valueLen - 1 && value[i + 1] == '\n') {
-                        RecvBuffer.Append($"\r\n");
+                        // 判断是否是最后一个 \r\n
+                        if (i + 2 < valueLen) {
+                            RecvBuffer.Append($"\r\n[{now}] ");
+                        } else {
+                            RecvBuffer.Append("\r\n"); // 最后一行不加时间戳
+                        }
                         flag = 1;
-                        i++;//跳过 \n
+                        i++; // 跳过 \n
                         continue;
-                    } else if (c == '\r' || c == '\n') {
-                        RecvBuffer.Append($"\r\n");
+                    }
+                    else if (c == '\r' || c == '\n') {
+                        // 判断是否是最后一个字符
+                        if (i < valueLen - 1) {
+                            RecvBuffer.Append($"\r\n[{now}] ");
+                        } else {
+                            RecvBuffer.Append("\r\n"); // 最后一行不加时间戳
+                        }
                         flag = 1;
                         continue;
                     } else {
