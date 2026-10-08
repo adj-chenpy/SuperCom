@@ -1937,7 +1937,7 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="auto" />
                                                 <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="100" />
+                                                <ColumnDefinition Width="210" />
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0" Margin="6">
                                                 <ToggleButton
@@ -2288,10 +2288,53 @@
                                             </Popup>
 
                                             <Grid Grid.Column="2">
-
-
-
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" />
+                                                </Grid.RowDefinitions>
+                                                <StackPanel
+                                                    Grid.Row="0"
+                                                    Margin="5,5,7,0"
+                                                    HorizontalAlignment="Right"
+                                                    Orientation="Horizontal">
+                                                    <Grid Width="100" Height="32">
+                                                        <Button
+                                                            Width="100"
+                                                            Height="32"
+                                                            Margin="0"
+                                                            Padding="8,5"
+                                                            Click="ToggleLoopSend"
+                                                            Content="循环发送"
+                                                            Tag="{Binding Name}"
+                                                            Visibility="{Binding IsLoopSending, Converter={StaticResource BoolToOppositeVisibilityConverter}}" />
+                                                        <Button
+                                                            Width="100"
+                                                            Height="32"
+                                                            Margin="0"
+                                                            Padding="8,5"
+                                                            Click="ToggleLoopSend"
+                                                            Content="停止循环"
+                                                            Style="{StaticResource ButtonDanger}"
+                                                            Tag="{Binding Name}"
+                                                            Visibility="{Binding IsLoopSending, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                                    </Grid>
+                                                    <super:SearchBox
+                                                        Width="60"
+                                                        Margin="6,0,3,0"
+                                                        Padding="4"
+                                                        IsEnabled="{Binding IsLoopSending, Converter={StaticResource OppositeBooleanConverter}}"
+                                                        ShowClearButton="False"
+                                                        Style="{StaticResource SearchTextBoxStyle}"
+                                                        ToolTip="循环发送间隔（毫秒）"
+                                                        Text="{Binding LoopSendInterval, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        TextAlignment="Center" />
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        Style="{StaticResource BaseTextBlock}"
+                                                        Text="ms" />
+                                                </StackPanel>
                                                 <Button
+                                                    Grid.Row="1"
                                                     Margin="5,5,7,5"
                                                     Padding="10"
                                                     HorizontalAlignment="Stretch"

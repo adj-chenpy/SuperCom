@@ -166,6 +166,24 @@ namespace SuperCom.Entity
             }
         }
 
+        private string _LoopSendInterval = "100";
+        /// <summary>
+        /// 循环发送间隔，单位为毫秒。
+        /// </summary>
+        public string LoopSendInterval {
+            get { return _LoopSendInterval; }
+            set { _LoopSendInterval = value; RaisePropertyChanged(); }
+        }
+
+        private bool _IsLoopSending;
+        /// <summary>
+        /// 当前是否正在循环发送。
+        /// </summary>
+        public bool IsLoopSending {
+            get { return _IsLoopSending; }
+            set { _IsLoopSending = value; RaisePropertyChanged(); }
+        }
+
 
         private bool _AddTimeStamp = true;
         public bool AddTimeStamp {

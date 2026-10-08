@@ -26,11 +26,13 @@ using SuperUtils.Values;
 using SuperUtils.WPF.VisualTools;
 using System;
 using System.Collections.Generic;
+using Stopwatch = System.Diagnostics.Stopwatch;
 using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Runtime.Remoting.Contexts;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -53,6 +55,7 @@ namespace SuperCom
     {
         private const double DEFAULT_SEND_PANEL_HEIGHT = 186;
         private const int DEFAULT_PORT_OPEN_INTERVAL = 100;
+        private const int DEFAULT_LOOP_SEND_INTERVAL = 100;
 
         /// <summary>
         /// HEX 转换工具中最大长度
@@ -77,6 +80,9 @@ namespace SuperCom
         private Window_VirtualPort virtualPort { get; set; }
         private Window_AdvancedSend window_AdvancedSend { get; set; }
         public VieModel_Main vieModel { get; set; }
+
+        private readonly Dictionary<string, CancellationTokenSource> loopSendCancellationTokens =
+            new Dictionary<string, CancellationTokenSource>();
 
         /// <summary>
         /// 支持标签栏拖拽
@@ -650,6 +656,7 @@ namespace SuperCom
         {
             if (vieModel.PortTabItems == null || string.IsNullOrEmpty(portName))
                 return false;
+            StopLoopSend(portName);
             PortTabItem portTabItem = vieModel.PortTabItems.FirstOrDefault(arg => arg.Name.Equals(portName));
             if (portTabItem == null)
                 return false;
@@ -912,6 +919,88 @@ namespace SuperCom
             }
         }
 
+        private async void ToggleLoopSend(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            PortTabItem portTabItem = button?.DataContext as PortTabItem;
+            if (portTabItem == null || string.IsNullOrEmpty(portTabItem.Name))
+                return;
+
+            string portName = portTabItem.Name;
+            if (portTabItem.IsLoopSending) {
+                StopLoopSend(portName);
+                return;
+            }
+
+            if (!int.TryParse(portTabItem.LoopSendInterval, out int interval) || interval <= 0) {
+                portTabItem.LoopSendInterval = DEFAULT_LOOP_SEND_INTERVAL.ToString();
+                portTabItem.IsLoopSending = false;
+                MessageNotify.Warning("循环发送间隔必须是大于 0 的整数，已恢复为 100 ms");
+                return;
+            }
+
+            StopLoopSend(portName);
+            portTabItem.IsLoopSending = true;
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            loopSendCancellationTokens[portName] = cancellationTokenSource;
+            vieModel.SaveToHistory(portTabItem.WriteData);
+            Logger.Info($"start loop send command, port name: {portName}, interval: {interval} ms");
+
+            try {
+                // 以发送开始时间为基准，避免每次串口写入和界面更新的耗时累积到间隔里。
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                long intervalTicks = Math.Max(1, (long)Math.Ceiling(interval * (double)Stopwatch.Frequency / 1000));
+                long nextSendTicks = 0;
+                while (!cancellationTokenSource.IsCancellationRequested) {
+                    long remainingTicks = nextSendTicks - stopwatch.ElapsedTicks;
+                    if (remainingTicks > 0) {
+                        int delay = (int)Math.Min(int.MaxValue,
+                            Math.Ceiling(remainingTicks * 1000.0 / Stopwatch.Frequency));
+                        await Task.Delay(delay, cancellationTokenSource.Token);
+                        continue;
+                    }
+
+                    SendCommand(portName, false);
+                    nextSendTicks += intervalTicks;
+                    if (nextSendTicks <= stopwatch.ElapsedTicks) {
+                        // 发送时间超过间隔时跳过错过的时点，避免连续补发。
+                        nextSendTicks = (stopwatch.ElapsedTicks / intervalTicks + 1) * intervalTicks;
+                    }
+                }
+            } catch (TaskCanceledException) {
+                // 用户主动停止循环发送。
+            } finally {
+                if (loopSendCancellationTokens.TryGetValue(portName, out CancellationTokenSource current) &&
+                    current == cancellationTokenSource) {
+                    loopSendCancellationTokens.Remove(portName);
+                    portTabItem.IsLoopSending = false;
+                }
+                cancellationTokenSource.Dispose();
+            }
+        }
+
+        private void StopLoopSend(string portName)
+        {
+            if (string.IsNullOrEmpty(portName))
+                return;
+
+            if (loopSendCancellationTokens.TryGetValue(portName, out CancellationTokenSource cancellationTokenSource)) {
+                loopSendCancellationTokens.Remove(portName);
+                cancellationTokenSource.Cancel();
+                Logger.Info($"stop loop send command, port name: {portName}");
+            }
+
+            PortTabItem portTabItem = vieModel?.PortTabItems?.FirstOrDefault(arg => arg.Name.Equals(portName));
+            if (portTabItem != null)
+                portTabItem.IsLoopSending = false;
+        }
+
+        private void StopAllLoopSend()
+        {
+            foreach (string portName in loopSendCancellationTokens.Keys.ToList())
+                StopLoopSend(portName);
+        }
+
 
         private (ToggleButton, TextEditor) FindToggleButtonByBaseGrid(Grid baseGrid)
         {
@@ -922,14 +1011,15 @@ namespace SuperCom
             return (toggleButton, firstBorder.Child as TextEditor);
         }
 
-        public void SendCommand(string portName)
+        public void SendCommand(string portName, bool saveToHistory = true)
         {
             PortTabItem portTabItem = vieModel.PortTabItems.FirstOrDefault(arg => arg.Name.Equals(portName));
             if (portTabItem == null)
                 return;
 
             string value = portTabItem.WriteData;
-            vieModel.SaveToHistory(value);
+            if (saveToHistory)
+                vieModel.SaveToHistory(value);
             portTabItem.SendCommand(value);
         }
 
@@ -1005,6 +1095,7 @@ namespace SuperCom
 
         private async void mainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            StopAllLoopSend();
             // 保存配置
             SaveOpeningPorts();
             SaveComSettings();
