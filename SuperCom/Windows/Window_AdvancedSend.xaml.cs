@@ -254,6 +254,41 @@ namespace SuperCom
             AddNewSendCommand(idx);
         }
 
+        private void MoveCommandUp(object sender, RoutedEventArgs e)
+        {
+            MoveCommand(sender, -1);
+        }
+
+        private void MoveCommandDown(object sender, RoutedEventArgs e)
+        {
+            MoveCommand(sender, 1);
+        }
+
+        private void MoveCommand(object sender, int offset)
+        {
+            if (vieModel.RunningCommands || !(sender is FrameworkElement element) ||
+                !(element.DataContext is SendCommand command))
+                return;
+
+            int index = vieModel.SendCommands.IndexOf(command);
+            int targetIndex = index + offset;
+            if (index < 0 || targetIndex < 0 || targetIndex >= vieModel.SendCommands.Count)
+                return;
+
+            // 用户可能按其他列排序；移动后显示真实的发送顺序。
+            dataGrid.Items.SortDescriptions.Clear();
+            foreach (DataGridColumn column in dataGrid.Columns)
+                column.SortDirection = null;
+
+            vieModel.SendCommands.Move(index, targetIndex);
+            for (int i = 0; i < vieModel.SendCommands.Count; i++)
+                vieModel.SendCommands[i].Order = i;
+
+            dataGrid.SelectedItem = command;
+            dataGrid.ScrollIntoView(command);
+            SaveSendCommands(sender, null);
+        }
+
         private void DeleteCommand(object sender, RoutedEventArgs e)
         {
             FrameworkElement ele = sender as FrameworkElement;

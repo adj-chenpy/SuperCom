@@ -443,27 +443,36 @@
                     <DataGrid.Columns>
                         <DataGridTemplateColumn
                             Width="auto"
-                            MinWidth="40"
+                            MinWidth="100"
                             Header="{DynamicResource Operate}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border
-                                        Grid.Column="1"
-                                        Background="Transparent"
-                                        BorderBrush="{StaticResource TabItem.Selected.Background}">
-
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button
+                                            Width="24"
+                                            Height="24"
+                                            Margin="2,0"
+                                            Click="MoveCommandUp"
+                                            Content="↑"
+                                            IsEnabled="{Binding DataContext.RunningCommands, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource OppositeBooleanConverter}}"
+                                            ToolTip="上移命令" />
+                                        <Button
+                                            Width="24"
+                                            Height="24"
+                                            Margin="2,0"
+                                            Click="MoveCommandDown"
+                                            Content="↓"
+                                            IsEnabled="{Binding DataContext.RunningCommands, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource OppositeBooleanConverter}}"
+                                            ToolTip="下移命令" />
                                         <super:HoverPath
                                             Width="20"
                                             Height="20"
-                                            HorizontalAlignment="Right"
+                                            Margin="5,0,0,0"
+                                            VerticalAlignment="Center"
                                             Click="DeleteCommand"
                                             Style="{StaticResource CloseExHoverPath}"
                                             Tag="{Binding CommandID, Mode=OneWay}" />
-
-
-                                    </Border>
-
-
+                                    </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
